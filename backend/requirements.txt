@@ -7,7 +7,6 @@ aiofiles
 requests
 python-multipart
 google-generativeai
-# Optional (only if you use the local RAG/vectorstore):
-# langchain_community
-# langchain_huggingface
-# faiss-cpu
+langchain_community
+langchain_huggingface
+faiss-cpu

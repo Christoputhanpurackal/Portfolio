@@ -8,7 +8,7 @@ from sqlalchemy import func
 import os
 from datetime import datetime, timedelta, date
 
-from rag import ask
+from rag import ask, get_system_status
 from database import engine, get_db, Base
 from models import ChatHistory, Visitor, Activity, Comment
 
@@ -81,6 +81,19 @@ def home():
     return {
         "message": "Portfolio RAG Backend Running",
         "status": "active"
+    }
+
+
+@app.get("/health")
+def health():
+    """Health check endpoint with system status"""
+    status = get_system_status()
+    return {
+        "status": "healthy" if status["ready"] else "degraded",
+        "vector_db": status["vector_db_status"],
+        "gemini_api": status["gemini_status"],
+        "ready": status["ready"],
+        "timestamp": datetime.utcnow().isoformat()
     }
 
 
