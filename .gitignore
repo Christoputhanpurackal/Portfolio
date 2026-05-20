@@ -1,0 +1,56 @@
+# Virtual environment
+myenv/
+venv/
+
+# Environment variables
+.env
+backend/.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# VS Code
+.vscode/
+
+# Database
+portfolio.db
+backend/portfolio.db
+
+# Test files (optional)
+backend/test.py
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Build/cache
+.cache/
+.pytest_cache/
+# Virtual env
+myenv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets
+.env
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Database
+portfolio.db
+backend/portfolio.db
+
+# Optional
+backend/test.py
+.vscode/
