@@ -35,7 +35,7 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/chat', { question: messageText });
+      const response = await axios.post('/chat', { question: messageText });
       setMessages(prev => [...prev, { role: 'assistant', content: response.data.answer }]);
     } catch (error) {
       console.error("AI Assistant Error:", error);

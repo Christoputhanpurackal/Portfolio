@@ -11,7 +11,7 @@ export default function Certificates() {
   useEffect(() => {
     const fetchCertificates = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/certificates');
+        const response = await axios.get('/certificates');
         setCertificates(response.data.certificates || []);
       } catch (error) {
         console.error("Error fetching certificates", error);
@@ -59,7 +59,7 @@ export default function Certificates() {
                     <Award className="w-8 h-8" />
                   </div>
                   <a 
-                    href={`http://localhost:8000/certificate/${cert}`} 
+                    href={`/certificate/${cert}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-gray-400 hover:text-white transition-colors"
@@ -106,14 +106,14 @@ export default function Certificates() {
               </div>
               <div className="flex-1 overflow-auto">
                 <iframe 
-                  src={`http://localhost:8000/certificate/${selectedCert}`}
+                  src={`/certificate/${selectedCert}`}
                   className="w-full h-full"
                   title={selectedCert}
                 />
               </div>
               <div className="flex gap-4 p-6 border-t border-white/10">
                 <a 
-                  href={`http://localhost:8000/certificate/${selectedCert}`}
+                  href={`/certificate/${selectedCert}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="px-6 py-2 rounded-lg bg-primary hover:bg-blue-600 text-white font-medium transition-colors flex items-center gap-2"

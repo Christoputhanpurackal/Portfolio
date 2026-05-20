@@ -34,7 +34,7 @@ export default function Hero() {
               <a href="#projects" className="px-8 py-3 rounded-full bg-primary hover:bg-blue-600 text-white font-medium flex items-center transition-colors">
                 View Projects <ArrowRight className="ml-2 w-4 h-4" />
               </a>
-              <a href="http://localhost:8000/download-cv" target="_blank" rel="noopener noreferrer" className="px-8 py-3 rounded-full glass hover:bg-white/10 font-medium flex items-center transition-colors">
+              <a href="/download-cv" target="_blank" rel="noopener noreferrer" className="px-8 py-3 rounded-full glass hover:bg-white/10 font-medium flex items-center transition-colors">
                 Download Resume <Download className="ml-2 w-4 h-4" />
               </a>
               <a href="#contact" className="px-8 py-3 rounded-full border border-white/20 hover:bg-white/5 font-medium flex items-center transition-colors">
@@ -52,7 +52,7 @@ export default function Hero() {
             <div className="relative w-72 h-72 md:w-96 md:h-96 rounded-full p-2 glass">
               <div className="w-full h-full rounded-full overflow-hidden border-4 border-white/10 relative">
                 <img 
-                  src={imgError ? "https://ui-avatars.com/api/?name=Christo+Puthanpurackal&size=512&background=0D8ABC&color=fff" : "http://localhost:8000/static/profile.jpg"} 
+                  src={imgError ? "https://ui-avatars.com/api/?name=Christo+Puthanpurackal&size=512&background=0D8ABC&color=fff" : "/static/profile.jpg"} 
                   alt="Christo Puthanpurackal" 
                   className="w-full h-full object-cover"
                   onError={() => setImgError(true)}

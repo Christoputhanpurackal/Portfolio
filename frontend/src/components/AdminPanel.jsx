@@ -17,7 +17,7 @@ export default function AdminPanel({ isOpen, onClose }) {
     setLoading(true);
     setStatus(null);
     try {
-      const res = await axios.post('http://localhost:8000/admin/login', { username, password });
+      const res = await axios.post('/admin/login', { username, password });
       setToken(res.data.token);
       setIsAuthenticated(true);
     } catch (err) {
@@ -47,7 +47,7 @@ export default function AdminPanel({ isOpen, onClose }) {
         headers['X-Filename'] = file.name;
       }
 
-      await axios.post(`http://localhost:8000/upload/${type}`, file, { headers });
+      await axios.post(`/upload/${type}`, file, { headers });
       setStatus({ type: 'success', message: `${type} uploaded successfully!` });
       
       // Reload page to reflect changes if it's profile or CV
