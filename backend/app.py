@@ -19,13 +19,8 @@ app = FastAPI()
 # Base directory for backend files (ensures paths resolve when running from project root)
 BASE_DIR = os.path.dirname(__file__)
 
-# If a built frontend exists at ../frontend/dist, serve it under /frontend
+# Resolve built frontend directory path
 dist_dir = os.path.abspath(os.path.join(BASE_DIR, '..', 'frontend', 'dist'))
-if os.path.exists(dist_dir):
-    try:
-        app.mount('/frontend', StaticFiles(directory=dist_dir), name='frontend')
-    except Exception:
-        pass
 
 # Ensure static directory exists
 os.makedirs(os.path.join(BASE_DIR, 'static'), exist_ok=True)
@@ -535,3 +530,11 @@ async def upload_certificate(request: Request, authorization: str | None = Heade
     with open(dest,'wb') as f:
         f.write(body)
     return {'status':'ok', 'path': f'/certificate/{filename}'}
+
+
+# If a built frontend exists at ../frontend/dist, serve it under the root "/" directory
+if os.path.exists(dist_dir):
+    try:
+        app.mount('/', StaticFiles(directory=dist_dir, html=True), name='frontend')
+    except Exception as mount_err:
+        print(f"[INIT] Error mounting frontend: {mount_err}")

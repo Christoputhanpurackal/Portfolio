@@ -1,38 +1,107 @@
+import os
+import json
+from dotenv import load_dotenv
+from google import genai
 from utils.pdf_loader import load_pdfs
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+
+# Load environment variables
+load_dotenv()
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 pdfs = [
-    r"data\Christo_Complete_RAG_Portfolio.pdf",
-    r"data\Christo_RAG_Portfolio.pdf"
+    os.path.join(BASE_DIR, "data", "Christo_Complete_RAG_Portfolio.pdf"),
+    os.path.join(BASE_DIR, "data", "Christo_RAG_Portfolio.pdf")
 ]
 
-print("Loading PDFs...")
-docs = load_pdfs(pdfs)
+def split_text(text: str, chunk_size: int = 500, chunk_overlap: int = 50):
+    chunks = []
+    text = text.replace("\r", "")
+    start = 0
+    while start < len(text):
+        end = min(start + chunk_size, len(text))
+        
+        # Try to find a logical boundary near the end of the chunk
+        if end < len(text):
+            found = False
+            # Search for double newline, single newline, sentence end, word boundary
+            for sep in ["\n\n", "\n", ". ", " ", ", "]:
+                pos = text.rfind(sep, start + chunk_size - 80, end)
+                if pos != -1:
+                    end = pos + len(sep)
+                    found = True
+                    break
+            if not found:
+                pos = text.rfind(" ", start, end)
+                if pos != -1:
+                    end = pos + 1
+                    
+        chunk = text[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+            
+        start = end - chunk_overlap
+        if start <= 0 or start >= len(text) or end >= len(text):
+            break
+            
+    return chunks
 
-print("Splitting documents...")
+def run_ingestion():
+    print("[INGEST] Loading PDFs...")
+    docs = load_pdfs(pdfs)
+    if not docs:
+        print("[INGEST] No documents found to ingest.")
+        return False
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=500,
-    chunk_overlap=50
-)
+    print("[INGEST] Splitting documents...")
+    chunks = []
+    for doc in docs:
+        split_chunks = split_text(doc.page_content, chunk_size=500, chunk_overlap=50)
+        for chunk in split_chunks:
+            chunks.append({
+                "text": chunk,
+                "metadata": doc.metadata
+            })
 
-chunks = splitter.split_documents(docs)
+    print(f"[INGEST] Created {len(chunks)} chunks.")
 
-print(f"Created {len(chunks)} chunks")
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key:
+        print("[INGEST] ERROR: GEMINI_API_KEY is not set. Cannot generate embeddings.")
+        return False
 
-print("Creating embeddings...")
+    try:
+        print("[INGEST] Initializing Gemini Client...")
+        client = genai.Client(api_key=api_key)
 
-embedding = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+        print("[INGEST] Generating batch embeddings via Gemini API...")
+        texts_to_embed = [c["text"] for c in chunks]
+        
+        response = client.models.embed_content(
+            model="gemini-embedding-2",
+            contents=texts_to_embed
+        )
 
-vector_db = FAISS.from_documents(
-    chunks,
-    embedding
-)
+        print("[INGEST] Processing response embeddings...")
+        for i, emb in enumerate(response.embeddings):
+            chunks[i]["embedding"] = emb.values
 
-vector_db.save_local("vectorstore")
+        # Ensure directory exists
+        vectorstore_dir = os.path.join(BASE_DIR, "vectorstore")
+        os.makedirs(vectorstore_dir, exist_ok=True)
+        
+        # Save chunks with embeddings to JSON file
+        vectorstore_file = os.path.join(vectorstore_dir, "vectorstore.json")
+        with open(vectorstore_file, "w", encoding="utf-8") as f:
+            json.dump(chunks, f, indent=2, ensure_ascii=False)
 
-print("Done")
+        print(f"[INGEST] Done. Saved {len(chunks)} vectors to {vectorstore_file}")
+        return True
+    except Exception as e:
+        print(f"[INGEST] ERROR: Ingestion failed: {e}")
+        import logging
+        logging.exception(e)
+        return False
+
+if __name__ == "__main__":
+    run_ingestion()

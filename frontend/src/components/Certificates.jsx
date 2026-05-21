@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, ExternalLink, X } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 export default function Certificates() {
   const [certificates, setCertificates] = useState([]);
@@ -59,7 +60,7 @@ export default function Certificates() {
                     <Award className="w-8 h-8" />
                   </div>
                   <a 
-                    href={`/certificate/${cert}`} 
+                    href={`${API_BASE_URL}/certificate/${cert}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-gray-400 hover:text-white transition-colors"
@@ -106,14 +107,14 @@ export default function Certificates() {
               </div>
               <div className="flex-1 overflow-auto">
                 <iframe 
-                  src={`/certificate/${selectedCert}`}
+                  src={`${API_BASE_URL}/certificate/${selectedCert}`}
                   className="w-full h-full"
                   title={selectedCert}
                 />
               </div>
               <div className="flex gap-4 p-6 border-t border-white/10">
                 <a 
-                  href={`/certificate/${selectedCert}`}
+                  href={`${API_BASE_URL}/certificate/${selectedCert}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="px-6 py-2 rounded-lg bg-primary hover:bg-blue-600 text-white font-medium transition-colors flex items-center gap-2"
