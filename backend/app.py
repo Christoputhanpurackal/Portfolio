@@ -471,7 +471,7 @@ def get_cert(filename: str):
 def admin_login(data: dict):
     username = data.get('username')
     password = data.get('password')
-    if username == 'christo' and password == 'placeholder':
+    if username == 'christo' and password == '7902661908':
         return {'token': 'admin-token'}
     raise HTTPException(status_code=401, detail='Invalid credentials')
 
