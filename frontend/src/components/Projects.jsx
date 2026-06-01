@@ -39,7 +39,18 @@ export default function Projects() {
                   <div className="flex justify-between items-start mb-4">
                     <FolderGit2 className="w-8 h-8 text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{project.title}</h3>
+                  {project.link ? (
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
+                      <a href={project.link} target="_blank" rel="noopener noreferrer" className="hover:underline">{project.title}</a>
+                    </h3>
+                  ) : (
+                    <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{project.title}</h3>
+                  )}
+
+                  {project.description && (
+                    <p className="text-sm text-gray-300 mb-3">{project.description}</p>
+                  )}
+
                   <div className="flex items-center text-xs text-gray-500 mb-4">
                     <span className="w-3 h-3 rounded-full bg-blue-500 mr-2"></span>
                     {project.tech}
