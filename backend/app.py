@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, Request, Header
+from fastapi import FastAPI, HTTPException, Depends, Request, Header, UploadFile, File, Form
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, date
 
 from rag import ask, get_system_status
 from database import engine, get_db, Base
-from models import ChatHistory, Visitor, Activity, Comment
+from models import ChatHistory, Visitor, Activity, Comment, Profile, Project
 
 Base.metadata.create_all(bind=engine)
 
@@ -93,23 +93,22 @@ def health():
 
 
 @app.get("/profile")
-def profile():
-
+def get_profile(db: Session = Depends(get_db)):
+    prof = db.query(Profile).first()
+    if not prof:
+        prof = Profile()
+        db.add(prof)
+        db.commit()
+        db.refresh(prof)
     return {
-        "name": "Christo Puthanpurackal",
-        "role": "AI / Data Science Graduate",
-        "skills": [
-            "Python",
-            "Machine Learning",
-            "Deep Learning",
-            "Flask",
-            "FastAPI",
-            "Data Science"
-        ],
-        "languages": [
-            "English",
-            "Malayalam"
-        ]
+        "name": prof.name,
+        "title": prof.title,
+        "about": prof.about,
+        "email": prof.email,
+        "github": prof.github,
+        "linkedin": prof.linkedin,
+        "skills": ["Python", "Machine Learning", "Deep Learning", "Flask", "FastAPI", "React", "TailwindCSS"],
+        "languages": ["English", "Malayalam"]
     }
 
 
@@ -486,50 +485,154 @@ def verify_admin_token(auth: str | None):
 
 
 @app.post('/upload/profile')
-async def upload_profile(request: Request, authorization: str | None = Header(None)):
+async def upload_profile(file: UploadFile = File(...), authorization: str | None = Header(None)):
     if not verify_admin_token(authorization):
         raise HTTPException(status_code=403, detail='Forbidden')
-    body = await request.body()
-    if not body:
-        raise HTTPException(status_code=400, detail='No file data provided')
+    
     os.makedirs(os.path.join(BASE_DIR,'static'), exist_ok=True)
     dest = os.path.join(BASE_DIR,'static','profile.jpg')
+    content = await file.read()
     with open(dest,'wb') as f:
-        f.write(body)
+        f.write(content)
     return {'status':'ok', 'path': '/profile.jpg'}
 
 
 @app.post('/upload/resume')
-async def upload_resume(request: Request, authorization: str | None = Header(None)):
+async def upload_resume(file: UploadFile = File(...), authorization: str | None = Header(None)):
     if not verify_admin_token(authorization):
         raise HTTPException(status_code=403, detail='Forbidden')
-    body = await request.body()
-    if not body:
-        raise HTTPException(status_code=400, detail='No file data provided')
+    
     os.makedirs(os.path.join(BASE_DIR,'static','cv'), exist_ok=True)
     dest = os.path.join(BASE_DIR,'static','cv','CHRISTO AI.pdf')
+    content = await file.read()
     with open(dest,'wb') as f:
-        f.write(body)
+        f.write(content)
     return {'status':'ok', 'path': '/download-cv'}
 
 
 @app.post('/upload/certificate')
-async def upload_certificate(request: Request, authorization: str | None = Header(None)):
+async def upload_certificate(file: UploadFile = File(...), authorization: str | None = Header(None)):
     if not verify_admin_token(authorization):
         raise HTTPException(status_code=403, detail='Forbidden')
-    body = await request.body()
-    if not body:
-        raise HTTPException(status_code=400, detail='No file data provided')
-    # filename can be provided via query param or header
-    filename = request.query_params.get('filename') or request.headers.get('X-Filename')
+    
+    filename = file.filename
     if not filename:
-        # fallback to timestamped filename
         filename = f"certificate_{int(datetime.utcnow().timestamp())}.pdf"
+        
     os.makedirs(os.path.join(BASE_DIR,'static','certificates'), exist_ok=True)
     dest = os.path.join(BASE_DIR,'static','certificates', filename)
+    content = await file.read()
     with open(dest,'wb') as f:
-        f.write(body)
+        f.write(content)
     return {'status':'ok', 'path': f'/certificate/{filename}'}
+
+class ProfileUpdate(BaseModel):
+    name: str
+    title: str
+    about: str
+    email: str
+    github: str
+    linkedin: str
+
+@app.post("/profile")
+def update_profile(data: ProfileUpdate, authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    prof = db.query(Profile).first()
+    if not prof:
+        prof = Profile()
+        db.add(prof)
+    
+    prof.name = data.name
+    prof.title = data.title
+    prof.about = data.about
+    prof.email = data.email
+    prof.github = data.github
+    prof.linkedin = data.linkedin
+    prof.updated_at = datetime.utcnow()
+    db.commit()
+    return {"status": "ok"}
+
+@app.get("/visitors")
+def get_all_visitors(authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    visitors = db.query(Visitor).order_by(Visitor.first_visit.desc()).limit(1000).all()
+    return [
+        {
+            "id": v.id,
+            "ip": v.ip,
+            "browser": v.browser,
+            "device": v.device,
+            "date": v.first_visit.isoformat()
+        }
+        for v in visitors
+    ]
+
+@app.delete("/visitors/{vid}")
+def delete_visitor(vid: int, authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    visitor = db.query(Visitor).filter(Visitor.id == vid).first()
+    if visitor:
+        db.query(Activity).filter(Activity.visitor_id == visitor.id).delete()
+        db.delete(visitor)
+        db.commit()
+    return {"status": "ok"}
+
+class ProjectCreate(BaseModel):
+    title: str
+    tech: str
+    active: bool = True
+
+@app.get("/projects")
+def get_projects(db: Session = Depends(get_db)):
+    projects = db.query(Project).all()
+    return [
+        {"id": p.id, "title": p.title, "tech": p.tech, "active": bool(p.active)}
+        for p in projects
+    ]
+
+@app.post("/projects")
+def save_project(data: ProjectCreate, authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    p = Project(title=data.title, tech=data.tech, active=1 if data.active else 0)
+    db.add(p)
+    db.commit()
+    db.refresh(p)
+    return {"status": "ok", "id": p.id}
+
+@app.post("/projects/{pid}")
+def update_project(pid: int, data: ProjectCreate, authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    p = db.query(Project).filter(Project.id == pid).first()
+    if p:
+        p.title = data.title
+        p.tech = data.tech
+        p.active = 1 if data.active else 0
+        db.commit()
+    return {"status": "ok"}
+
+@app.delete("/projects/{pid}")
+def delete_project(pid: int, authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    p = db.query(Project).filter(Project.id == pid).first()
+    if p:
+        db.delete(p)
+        db.commit()
+    return {"status": "ok"}
+
+@app.delete("/certificate/{filename:path}")
+def delete_certificate(filename: str, authorization: str | None = Header(None)):
+    if not verify_admin_token(authorization):
+        raise HTTPException(status_code=403, detail='Forbidden')
+    file_path = os.path.join(BASE_DIR, "static", "certificates", filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    return {"status": "ok"}
 
 
 # If a built frontend exists at ../frontend/dist, serve it under the root "/" directory

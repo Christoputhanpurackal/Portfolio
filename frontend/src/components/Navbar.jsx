@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const navItems = [
   { name: 'About', href: '#about' },
@@ -10,15 +11,16 @@ const navItems = [
   { name: 'Contact', href: '#contact' },
 ];
 
-export default function Navbar({ onOpenAdmin }) {
+export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className="fixed w-full z-50 glass border-b border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <a href="#" className="text-xl font-bold text-gradient" onDoubleClick={onOpenAdmin} title="Double click for Admin">
+            <a href="#" className="text-xl font-bold text-gradient" onDoubleClick={() => navigate('/admin/login')} title="Double click for Admin">
               Christo.AI
             </a>
           </div>
@@ -33,6 +35,12 @@ export default function Navbar({ onOpenAdmin }) {
                   {item.name}
                 </a>
               ))}
+              <button
+                onClick={() => navigate('/admin/login')}
+                className="bg-primary/20 hover:bg-primary/40 text-primary px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-primary/30"
+              >
+                Admin
+              </button>
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">
@@ -66,6 +74,15 @@ export default function Navbar({ onOpenAdmin }) {
                 {item.name}
               </a>
             ))}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                navigate('/admin/login');
+              }}
+              className="w-full text-left bg-primary/20 hover:bg-primary/40 text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors mt-2"
+            >
+              Admin
+            </button>
           </div>
         </motion.div>
       )}

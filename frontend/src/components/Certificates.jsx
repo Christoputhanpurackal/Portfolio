@@ -1,27 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Award, ExternalLink, X } from 'lucide-react';
-import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import { usePortfolio } from '../context/PortfolioContext';
 
 export default function Certificates() {
-  const [certificates, setCertificates] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data } = usePortfolio();
+  const { certificates, loading } = data;
   const [selectedCert, setSelectedCert] = useState(null);
 
-  useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const response = await axios.get('/certificates');
-        setCertificates(response.data.certificates || []);
-      } catch (error) {
-        console.error("Error fetching certificates", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCertificates();
-  }, []);
+  const cacheBuster = new Date().getTime();
 
   return (
     <section id="certificates" className="py-20 relative">
@@ -60,7 +48,7 @@ export default function Certificates() {
                     <Award className="w-8 h-8" />
                   </div>
                   <a 
-                    href={`${API_BASE_URL}/certificate/${cert}`} 
+                    href={`${API_BASE_URL}/certificate/${cert}?t=${cacheBuster}`} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-gray-400 hover:text-white transition-colors"
@@ -107,14 +95,14 @@ export default function Certificates() {
               </div>
               <div className="flex-1 overflow-auto">
                 <iframe 
-                  src={`${API_BASE_URL}/certificate/${selectedCert}`}
+                  src={`${API_BASE_URL}/certificate/${selectedCert}?t=${cacheBuster}`}
                   className="w-full h-full"
                   title={selectedCert}
                 />
               </div>
               <div className="flex gap-4 p-6 border-t border-white/10">
                 <a 
-                  href={`${API_BASE_URL}/certificate/${selectedCert}`}
+                  href={`${API_BASE_URL}/certificate/${selectedCert}?t=${cacheBuster}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="px-6 py-2 rounded-lg bg-primary hover:bg-blue-600 text-white font-medium transition-colors flex items-center gap-2"

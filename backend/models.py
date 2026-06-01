@@ -63,3 +63,24 @@ class Comment(Base):
     rating = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     likes = Column(Integer, default=0)
+
+class Profile(Base):
+    __tablename__ = "profile"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, default="Christo")
+    title = Column(String, default="AI Engineer")
+    about = Column(Text, default="I am an AI Engineer with a passion for building intelligent systems.")
+    email = Column(String, default="hello@example.com")
+    github = Column(String, default="https://github.com/christo")
+    linkedin = Column(String, default="https://linkedin.com/in/christo")
+    updated_at = Column(DateTime, default=datetime.utcnow)
+
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    tech = Column(String, nullable=False)
+    active = Column(Integer, default=1) # 1 for True, 0 for False
+    created_at = Column(DateTime, default=datetime.utcnow)

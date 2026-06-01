@@ -1,6 +1,12 @@
 import { motion } from 'framer-motion';
+import { usePortfolio } from '../context/PortfolioContext';
 
 export default function About() {
+  const { data } = usePortfolio();
+  const { profile } = data;
+
+  if (!profile) return null;
+
   return (
     <section id="about" className="py-20 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,15 +29,12 @@ export default function About() {
             transition={{ duration: 0.8 }}
             className="glass-card p-8"
           >
-            <p className="text-lg text-gray-300 leading-relaxed mb-6">
-              I am a BTech graduate in Computer Science and Technology with a strong interest in Artificial Intelligence, Machine Learning, and Data Science.
-            </p>
-            <p className="text-lg text-gray-300 leading-relaxed mb-6">
-              After completing my degree, I specialized in Data Science and AI, gaining practical industry exposure through internships and real-world projects. I enjoy building intelligent systems, AI-powered applications, and solving real-world problems using technology.
+            <p className="text-lg text-gray-300 leading-relaxed mb-6 whitespace-pre-line">
+              {profile.about}
             </p>
             <div className="bg-white/5 p-4 rounded-xl border border-white/10">
               <h4 className="text-xl font-semibold mb-2 text-blue-400">Current Role</h4>
-              <p className="text-white">Junior AI Engineer @ Urbanex Analytics Pvt Ltd</p>
+              <p className="text-white">{profile.title}</p>
             </div>
           </motion.div>
 
